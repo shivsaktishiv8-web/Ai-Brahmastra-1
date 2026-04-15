@@ -1,49 +1,42 @@
-name: Build APK
-on: push
+name: Brahmastra_Ultimate_Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # 🔱 Manual Button Trigger
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Install System Dependencies
         run: |
           sudo apt update
           sudo apt install -y python3-pip build-essential git python3 python3-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libssl-dev libjpeg-dev zlib1g-dev libffi8 liblzma-dev uuid-dev openjdk-17-jdk
 
-      - name: Setup Python and Buildozer
+      - name: Setup Buildozer
         run: |
           pip3 install --user --upgrade buildozer cython==0.29.36 virtualenv
+          export PATH=$PATH:$HOME/.local/bin
 
-      - name: Build with Buildozer (GitHub Recommended Retry)
+      - name: Build APK (The Force Method)
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # GitHub ne kaha 3 baar retry karo, toh hum 3 baar karenge
-          for attempt in {1..3}; do
-            echo "Build attempt $attempt/3..."
-            if yes | buildozer android debug; then
-              echo "Build Successful!"
-              break
-            fi
-            echo "Attempt $attempt failed, retrying in 15 seconds..."
-            sleep 15
+          # 3 baar koshish karega agar internet fail ho
+          for i in {1..3}; do
+            yes | buildozer android debug && break || sleep 30
           done
           
-          # 🔱 APK Discovery: Chahe jahan bhi banti ho, dhoond kar bahar lao
-          echo "Looking for APK in all folders..."
+          # 🔱 APK Hunt
           find . -name "*.apk" -exec cp {} ./brahmastra_final.apk \;
-          
-          # Check ki file mili ya nahi
-          if [ -f ./brahmastra_final.apk ]; then
-            echo "APK found and ready!"
-          else
-            echo "ERROR: APK NOT FOUND"
-            exit 1
-          fi
         continue-on-error: false
 
-      - name: Upload APK
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Brahmastra-Final-Download
+          name: Brahmastra-Official-APK
           path: brahmastra_final.apk
+
